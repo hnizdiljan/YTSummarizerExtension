@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Summarizer</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #282828;
+            --text-color: #333;
+            --background-color: #f9f9f9;
+            --input-background: #fff;
+            --border-color: #ddd;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            width: 350px;
+            max-width: 100%;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;  /* Zmenšeno z 15px */
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"], input[type="password"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: var(--input-background);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #cc0000;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        #clearCache {
+            grid-column: 1 / -1;  /* Roztáhne tlačítko přes celou šířku */
+            background-color: var(--danger-color);
+            margin-top: 5px;  /* Přidá malý odstup od ostatních tlačítek */
+        }
+
+        #clearCache:hover {
+            background-color: #bd2130;  /* Tmavší odstín pro hover efekt */
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            background-color: var(--input-background);
+            margin-top: 5px;  /* Přidáno pro menší odsazení od nadpisů */
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            margin-top: 10px;
+        }
+
+        #status {
+            text-align: center;
+            font-style: italic;
+            color: var(--secondary-color);
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 400px) {
+            body {
+                padding: 10px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Summarizer</h1>
+
+    <div class="container">
+        <div class="input-group">
+            <input type="password" id="apiKey" placeholder="Zadejte OpenAI API klíč">
+            <button id="saveApiKey">Uložit klíč</button>
+        </div>
+
+        <div class="action-buttons">
+            <button id="getTranscript">Stáhnout titulky</button>
+            <button id="summarize">Sumarizovat video</button>
+            <button id="generateChapters">Vygenerovat kapitoly</button>
+            <button id="clearCache">Vymazat cache</button>
+        </div>
+
+        <div class="status-container">
+            <div id="status"></div>
+            <div id="spinner" class="spinner" style="display: none;"></div>
+        </div>
+
+        <h2>Přepis videa</h2>
+        <textarea id="transcript" readonly></textarea>
+
+        <h2>Shrnutí</h2>
+        <textarea id="summary" readonly></textarea>
+
+        <h2>Kapitoly</h2>
+        <textarea id="chapters" readonly></textarea>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
