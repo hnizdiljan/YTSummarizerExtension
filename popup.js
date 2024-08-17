@@ -23,12 +23,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Funkce pro načtení aktuálního ID videa a aktualizaci UI
+    // Funkce pro aktualizaci aktuálního video ID a UI
+    function updateCurrentVideo() {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, {action: "getVideoId"}, function(response) {
+                if (response && response.videoId && response.videoId !== currentVideoId) {
+                    currentVideoId = response.videoId;
+                    updateButtonVisibility();
+                    loadCachedData(currentVideoId);
+                    clearTextAreas(); // Přidáno pro vyčištění textových polí při změně videa
+                }
+            });
+        });
+    }
+
+    // Voláme updateCurrentVideo při otevření popup a pak každou sekundu
+    updateCurrentVideo();
+    setInterval(updateCurrentVideo, 1000);
+
     // Volání funkce při načtení popup
     loadApiKey();
 
-    function showStatus(message, showSpinner = false) {
+    function clearTextAreas() {
+        transcriptTextArea.value = '';
+        summaryTextArea.value = '';
+        chaptersTextArea.value = '';
+    }
+
+    function showStatus(message, showSpinner = false, isError = false) {
         statusDiv.textContent = message;
+        statusDiv.style.color = isError ? 'red' : 'black';
         spinner.style.display = showSpinner ? 'inline-block' : 'none';
+        console.log(isError ? 'Chyba:' : 'Status:', message);  // Pro snazší debugování
     }
 
     function setTextAreaContent(textArea, content) {
@@ -144,10 +171,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function getVideoId(callback) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             chrome.tabs.sendMessage(tabs[0].id, {action: "getVideoId"}, function(response) {
-                currentVideoId = response.videoId;
-                callback(response.videoId);
-                updateButtonVisibility();
-                loadCachedData(response.videoId);
+                if (response && response.videoId) {
+                    currentVideoId = response.videoId;
+                    callback(response.videoId);
+                    updateButtonVisibility();
+                    loadCachedData(response.videoId);
+                } else {
+                    console.error('Nepodařilo se získat ID videa');
+                    showStatus('Chyba: Nepodařilo se získat ID videa', false, true);
+                }
             });
         });
     }
@@ -160,6 +192,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTextAreaContent(transcriptTextArea, response.transcript);
                     }
                 });
+            } else {
+                setTextAreaContent(transcriptTextArea, '');
             }
             if (response.hasSummary) {
                 chrome.runtime.sendMessage({action: "summarizeVideo", videoId: videoId}, function(response) {
@@ -167,6 +201,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTextAreaContent(summaryTextArea, response.summary);
                     }
                 });
+            } else {
+                setTextAreaContent(summaryTextArea, '');
             }
             if (response.hasChapters) {
                 chrome.runtime.sendMessage({action: "generateChapters", videoId: videoId}, function(response) {
@@ -174,6 +210,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTextAreaContent(chaptersTextArea, response.chapters);
                     }
                 });
+            } else {
+                setTextAreaContent(chaptersTextArea, '');
             }
         });
     }

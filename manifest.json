@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "YouTube Video Summarizer",
     "version": "1.1",
-    "description": "Vytváří shrnutí YouTube videí",
+    "description": "Enhance your YouTube experience with AI-powered video summaries, transcripts, and chapter generation. Save time and get key insights quickly!",
     "permissions": [
       "activeTab",
       "storage"

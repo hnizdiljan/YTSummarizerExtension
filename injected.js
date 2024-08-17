@@ -21,10 +21,10 @@ async function getSubtitles() {
 
         // Získáme titulky pomocí YouTube API
         const subtitles = await getSubtitlesFromAPI(videoId);
-        return subtitles;
+        window.postMessage({ type: 'FROM_PAGE', action: 'subtitlesResult', subtitles: subtitles }, '*');
     } catch (error) {
         console.error('Chyba při získávání titulků:', error);
-        return `Došlo k chybě při získávání titulků: ${error.message}`;
+        window.postMessage({ type: 'FROM_PAGE', action: 'subtitlesResult', error: error.message }, '*');
     }
 }
 
@@ -49,32 +49,46 @@ function getSubtitlesFromInitialResponse(response) {
 
 async function getSubtitlesFromAPI(videoId) {
     const apiUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const response = await fetch(apiUrl);
-    const html = await response.text();
-    
-    // Hledáme data v HTML odpovědi
-    const match = html.match(/"captions":\s*({[^}]+})/);
-    if (!match) {
-        throw new Error('Nelze najít data titulků v HTML odpovědi');
+    try {
+        const response = await fetch(apiUrl);
+        const html = await response.text();
+        
+        // Hledáme data v HTML odpovědi
+        const match = html.match(/"captions":\s*({[^}]+})/);
+        if (!match) {
+            throw new Error('Nelze najít data titulků v HTML odpovědi');
+        }
+
+        let captionData;
+        try {
+            captionData = JSON.parse(match[1]);
+        } catch (jsonError) {
+            console.error('Chyba při parsování JSON dat titulků:', jsonError);
+            // Pokusíme se opravit běžné problémy v JSON
+            const fixedJson = match[1].replace(/'/g, '"').replace(/(\w+):/g, '"$1":');
+            captionData = JSON.parse(fixedJson);
+        }
+
+        const captionTracks = captionData.playerCaptionsTracklistRenderer?.captionTracks;
+
+        if (!captionTracks || captionTracks.length === 0) {
+            return 'Pro toto video nejsou k dispozici žádné titulky';
+        }
+
+        // Preferujeme automaticky generované titulky (ASR), jinak použijeme první dostupné
+        const autoCaption = captionTracks.find(track => track.kind === 'asr');
+        const selectedCaption = autoCaption || captionTracks[0];
+
+        // Získáme titulky ve formátu JSON
+        const subsUrl = `${selectedCaption.baseUrl}&fmt=json3`;
+        const subsResponse = await fetch(subsUrl);
+        const jsonSubtitles = await subsResponse.json();
+
+        return parseJsonSubtitles(jsonSubtitles);
+    } catch (error) {
+        console.error('Chyba při získávání titulků:', error);
+        return `Došlo k chybě při získávání titulků: ${error.message}`;
     }
-
-    const captionData = JSON.parse(match[1]);
-    const captionTracks = captionData.playerCaptionsTracklistRenderer?.captionTracks;
-
-    if (!captionTracks || captionTracks.length === 0) {
-        return 'Pro toto video nejsou k dispozici žádné titulky';
-    }
-
-    // Preferujeme automaticky generované titulky (ASR), jinak použijeme první dostupné
-    const autoCaption = captionTracks.find(track => track.kind === 'asr');
-    const selectedCaption = autoCaption || captionTracks[0];
-
-    // Získáme titulky ve formátu JSON
-    const subsUrl = `${selectedCaption.baseUrl}&fmt=json3`;
-    const subsResponse = await fetch(subsUrl);
-    const jsonSubtitles = await subsResponse.json();
-
-    return parseJsonSubtitles(jsonSubtitles);
 }
 
 function getYouTubeVideoId() {
@@ -84,19 +98,25 @@ function getYouTubeVideoId() {
 
 function parseJsonSubtitles(jsonSubtitles) {
     let subtitles = '';
+    if (!jsonSubtitles || !jsonSubtitles.events) {
+        console.error('Neočekávaná struktura JSON titulků');
+        return 'Chyba: Neplatná struktura titulků';
+    }
     for (let event of jsonSubtitles.events) {
         if (event.segs) {
             const startTime = formatTime(event.tStartMs);
             let line = `${startTime} `;
             for (let seg of event.segs) {
-                line += decodeHtmlEntities(seg.utf8);
+                if (seg.utf8) {
+                    line += decodeHtmlEntities(seg.utf8);
+                }
             }
             if (line.trim() !== startTime) {  // Přidáváme pouze neprázdné řádky
                 subtitles += line.trim() + '\n';
             }
         }
     }
-    return subtitles.trim();
+    return subtitles.trim() || 'Nepodařilo se extrahovat titulky z JSON dat';
 }
 
 function formatTime(ms) {

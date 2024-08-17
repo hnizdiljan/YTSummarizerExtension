@@ -3,21 +3,20 @@ async function saveToCacheManager(videoId, key, data) {
   const cacheKey = `${videoId}_${key}`;
   let cacheData = {};
   cacheData[cacheKey] = {
-    timestamp: Date.now(),
-    data: data
+      timestamp: Date.now(),
+      data: data
   };
   await chrome.storage.local.set(cacheData);
 }
 
-// Funkce pro načítání dat z cache
 async function loadFromCacheManager(videoId, key) {
   const cacheKey = `${videoId}_${key}`;
   const result = await chrome.storage.local.get(cacheKey);
   if (result[cacheKey]) {
-    // Kontrola platnosti cache (např. 24 hodin)
-    if (Date.now() - result[cacheKey].timestamp < 24 * 60 * 60 * 1000) {
-      return result[cacheKey].data;
-    }
+      // Kontrola platnosti cache (např. 24 hodin)
+      if (Date.now() - result[cacheKey].timestamp < 24 * 60 * 60 * 1000) {
+          return result[cacheKey].data;
+      }
   }
   return null;
 }
@@ -29,6 +28,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
   }
 });
 
+// Funkce pro aktualizaci ikony rozšíření (beze změny)
 async function updateExtensionIcon(tabId, videoId) {
   const cacheStatus = await checkCache(videoId);
   let iconPath;
@@ -55,7 +55,12 @@ async function updateExtensionIcon(tabId, videoId) {
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === "getTranscript") {
+  if (request.action === "videoChanged") {
+      console.log('Video změněno, nové ID:', request.videoId);
+      updateExtensionIcon(sender.tab.id, request.videoId);
+      // Vymaže cache pro předchozí video
+      clearCache(request.videoId);
+  }else if (request.action === "getTranscript") {
       getSubtitles(request.videoId).then(sendResponse);
       return true;
   } else if (request.action === "summarizeVideo") {
@@ -94,6 +99,7 @@ async function clearCache(videoId) {
   return { success: true };
 }
 
+
 async function getSubtitles(videoId) {
   // Nejprve zkusíme načíst z cache
   const cachedTranscript = await loadFromCacheManager(videoId, 'transcript');
@@ -103,14 +109,23 @@ async function getSubtitles(videoId) {
 
   // Pokud není v cache, stáhneme nové
   return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Timeout při získávání titulků'));
+    }, 30000); // 30 sekund timeout
+
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       chrome.tabs.sendMessage(tabs[0].id, {action: "getSubtitles"}, async function(response) {
+        clearTimeout(timeoutId);
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
-        } else {
+        } else if (response && response.error) {
+          reject(new Error(response.error));
+        } else if (response && response.transcript) {
           // Uložíme do cache pro příští použití
-          await saveToCacheManager(videoId, 'transcript', response);
-          resolve({transcript: response});
+          await saveToCacheManager(videoId, 'transcript', response.transcript);
+          resolve({transcript: response.transcript});
+        } else {
+          reject(new Error('Neočekávaná odpověď při získávání titulků'));
         }
       });
     });
@@ -204,7 +219,7 @@ async function getChapters(text, apiKey) {
           model: "gpt-4o-mini",
           messages: [
               {role: "system", content: "Jsi asistent, který vytváří návrh kapitol s časovými odkazy na začátek každé kapitoly na základě poskytnutého textu s časovými značkami."},
-              {role: "user", content: `Vytvoř návrh kapitol s časovými odkazy na základě následujícího textu. Použij formát [HH:MM:SS] Název kapitoly: ${text}`}
+              {role: "user", content: `Vytvoř návrh těch nejdůležitějších kapitol s časovými odkazy na základě následujícího textu. Použij formát [HH:MM:SS] Název kapitoly: ${text}`}
           ]
       })
   });
