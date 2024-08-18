@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="optionsTitle">Nastavení YouTube Video Summarizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #cc0000;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        select, input {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #990000;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1 data-i18n="optionsTitle">Nastavení YouTube Video Summarizer</h1>
+    
+    <label for="language" data-i18n="languageLabel">Jazyk rozšíření:</label>
+    <select id="language">
+        <option value="cs" data-i18n="czech">Čeština</option>
+        <option value="en" data-i18n="english">Angličtina</option>
+        <option value="de" data-i18n="german">Němčina</option>
+        <option value="fr" data-i18n="french">Francouzština</option>
+    </select>
+
+    <label for="summaryLanguage" data-i18n="summaryLanguageLabel">Jazyk sumarizace:</label>
+    <select id="summaryLanguage">
+        <option value="cs" data-i18n="czech">Čeština</option>
+        <option value="en" data-i18n="english">Angličtina</option>
+        <option value="de" data-i18n="german">Němčina</option>
+        <option value="fr" data-i18n="french">Francouzština</option>
+    </select>
+
+    <label for="llm-api" data-i18n="llmApiLabel">LLM API:</label>
+    <select id="llm-api">
+        <option value="openai" data-i18n="openai">OpenAI</option>
+        <!-- Zde můžete přidat další API možnosti -->
+    </select>
+
+    <label for="model" data-i18n="modelLabel">Model:</label>
+    <select id="model">
+        <!-- Možnosti budou dynamicky generovány JavaScriptem -->
+    </select>
+
+    <label for="api-key" data-i18n="apiKeyLabel">API Klíč:</label>
+    <input type="password" id="api-key">
+
+    <button id="save" data-i18n="saveButton">Uložit nastavení</button>
+
+    <div id="status"></div>
+
+    <script src="options.js"></script>
+</body>
+</html>

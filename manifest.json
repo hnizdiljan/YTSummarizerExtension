@@ -3,6 +3,7 @@
     "name": "YouTube Video Summarizer",
     "version": "1.1",
     "description": "Enhance your YouTube experience with AI-powered video summaries, transcripts, and chapter generation. Save time and get key insights quickly!",
+    "options_page": "options.html",
     "permissions": [
       "activeTab",
       "storage"

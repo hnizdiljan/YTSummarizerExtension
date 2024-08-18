@@ -1,170 +1,92 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Summarizer</title>
+    <title data-i18n="extensionTitle">YouTube Video Summarizer</title>
     <style>
-        :root {
-            --primary-color: #ff0000;
-            --secondary-color: #282828;
-            --text-color: #333;
-            --background-color: #f9f9f9;
-            --input-background: #fff;
-            --border-color: #ddd;
-            --danger-color: #dc3545;
-        }
-
         body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            width: 350px;
-            max-width: 100%;
+            font-family: Arial, sans-serif;
+            width: 300px;
+            padding: 10px;
         }
-
         h1 {
-            color: var(--primary-color);
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-align: center;
+            color: #cc0000;
+            font-size: 18px;
         }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;  /* Zmenšeno z 15px */
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        input[type="text"], input[type="password"] {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-            background-color: var(--input-background);
-        }
-
         button {
-            background-color: var(--primary-color);
+            background-color: #cc0000;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
+            padding: 5px 10px;
+            margin: 5px 0;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
+            width: 100%;
         }
-
         button:hover {
-            background-color: #cc0000;
+            background-color: #990000;
         }
-
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        #clearCache {
-            grid-column: 1 / -1;  /* Roztáhne tlačítko přes celou šířku */
-            background-color: var(--danger-color);
-            margin-top: 5px;  /* Přidá malý odstup od ostatních tlačítek */
-        }
-
-        #clearCache:hover {
-            background-color: #bd2130;  /* Tmavší odstín pro hover efekt */
-        }
-
         textarea {
             width: 100%;
-            min-height: 100px;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-            resize: vertical;
-            background-color: var(--input-background);
-            margin-top: 5px;  /* Přidáno pro menší odsazení od nadpisů */
-        }
-
-        .status-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 30px;
+            height: 100px;
             margin-top: 10px;
         }
-
         #status {
-            text-align: center;
-            font-style: italic;
-            color: var(--secondary-color);
+            margin-top: 10px;
+            font-weight: bold;
         }
-
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary-color);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #cc0000;
             border-radius: 50%;
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
             margin-left: 10px;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        @media (max-width: 400px) {
-            body {
-                padding: 10px;
-            }
-
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
+        #currentSettings {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        #currentSettings p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>YouTube Video Summarizer</h1>
+    <h1 data-i18n="extensionTitle">YouTube Video Summarizer</h1>
 
-    <div class="container">
-        <div class="input-group">
-            <input type="password" id="apiKey" placeholder="Zadejte OpenAI API klíč">
-            <button id="saveApiKey">Uložit klíč</button>
-        </div>
-
-        <div class="action-buttons">
-            <button id="getTranscript">Stáhnout titulky</button>
-            <button id="summarize">Sumarizovat video</button>
-            <button id="generateChapters">Vygenerovat kapitoly</button>
-            <button id="clearCache">Vymazat cache</button>
-        </div>
-
-        <div class="status-container">
-            <div id="status"></div>
-            <div id="spinner" class="spinner" style="display: none;"></div>
-        </div>
-
-        <h2>Přepis videa</h2>
-        <textarea id="transcript" readonly></textarea>
-
-        <h2>Shrnutí</h2>
-        <textarea id="summary" readonly></textarea>
-
-        <h2>Kapitoly</h2>
-        <textarea id="chapters" readonly></textarea>
+    <div id="currentSettings">
+        <span id="llmApiLabel" data-i18n="llmApiLabel">LLM API: </span><span id="currentLlmApi"></span><br>
+        <span id="modelLabel" data-i18n="modelLabel">Model: </span><span id="currentModel"></span><br>
+        <span id="apiStatusLabel" data-i18n="apiStatusLabel">API: </span><span id="apiStatus"></span><br>
+        <span id="languageLabel" data-i18n="languageLabel">Jazyk: </span><span id="currentLanguage"></span>
     </div>
+
+    <button id="getTranscript" data-i18n="getTranscriptButton">Stáhnout titulky</button>
+    <button id="summarize" data-i18n="summarizeButton">Sumarizovat video</button>
+    <button id="generateChapters" data-i18n="generateChaptersButton">Vygenerovat kapitoly</button>
+    <button id="clearCache" data-i18n="clearCacheButton">Vymazat cache</button>
+
+    <div id="status"></div>
+    <div id="spinner" class="spinner" style="display: none;"></div>
+
+    <h2 data-i18n="transcriptTitle">Přepis videa</h2>
+    <textarea id="transcript" readonly></textarea>
+
+    <h2 data-i18n="summaryTitle">Shrnutí</h2>
+    <textarea id="summary" readonly></textarea>
+
+    <h2 data-i18n="chaptersTitle">Kapitoly</h2>
+    <textarea id="chapters" readonly></textarea>
 
     <script src="popup.js"></script>
 </body>
