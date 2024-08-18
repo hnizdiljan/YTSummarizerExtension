@@ -1,82 +1,98 @@
 # YouTube Video Summarizer
 
-YouTube Video Summarizer je rozšíření pro prohlížeč, které umožňuje uživatelům snadno získávat přepisy, shrnutí a kapitoly z YouTube videí. Toto rozšíření využívá pokročilé AI technologie pro generování užitečných souhrnů obsahu videa.
+YouTube Video Summarizer is a browser extension that allows users to easily obtain transcripts, summaries, and chapters from YouTube videos. This extension utilizes advanced AI technology to generate useful summaries of video content.
 
-## Funkce
+## Features
 
-- **Stažení přepisu**: Automaticky extrahuje titulky z YouTube videí.
-- **Sumarizace videa**: Generuje stručné shrnutí obsahu videa pomocí AI.
-- **Generování kapitol**: Vytváří návrh kapitol s časovými odkazy pro snadnou navigaci ve videu.
-- **Cachování dat**: Ukládá získaná data lokálně pro rychlejší přístup a offline použití.
-- **Indikátor stavu**: Dynamicky mění ikonu rozšíření pro zobrazení dostupnosti dat.
+- **Transcript Download**: Automatically extracts captions from YouTube videos.
+- **Video Summarization**: Generates concise summaries of video content using AI.
+- **Chapter Generation**: Creates chapter proposals with timestamps for easy video navigation.
+- **Data Caching**: Stores retrieved data locally for faster access and offline use.
+- **Status Indicator**: Dynamically changes the extension icon to display data availability.
+- **Multi-language Support**: Supports Czech, English, German, and French for the user interface and summary generation.
+- **Customizable Summary Language**: Allows users to select the language for summary generation independently of the extension language.
 
-## Instalace
+## Installation
 
-1. Stáhněte zdrojový kód rozšíření.
-2. Otevřete stránku rozšíření ve vašem prohlížeči (např. `chrome://extensions/` pro Chrome).
-3. Zapněte "Režim pro vývojáře".
-4. Klikněte na "Načíst nerozbalené" a vyberte složku se staženým kódem.
+1. Download the extension source code.
+2. Open the extensions page in your browser (e.g., `edge://extensions/` for Microsoft Edge).
+3. Enable "Developer mode".
+4. Click on "Load unpacked" and select the folder with the downloaded code.
 
-## Nastavení
+## Setup
 
-Před použitím rozšíření je nutné nastavit API klíč pro OpenAI:
+Before using the extension, you need to complete the following setup:
 
-1. Klikněte na ikonu rozšíření pro otevření popup okna.
-2. Vložte váš OpenAI API klíč do příslušného pole.
-3. Klikněte na "Uložit API klíč".
+1. Click on the extension icon and select "Settings" (or visit the options.html page).
+2. Choose the extension language and the language for summary generation.
+3. Select the desired LLM API (currently only OpenAI is supported).
+4. Choose the AI model (GPT-4o-mini or GPT-3.5-turbo).
+5. Enter your OpenAI API key.
+6. Click on "Save Settings".
 
-## Použití
+## Usage
 
-1. Navštivte video na YouTube.
-2. Klikněte na ikonu rozšíření pro otevření popup okna.
-3. Použijte tlačítka pro stažení přepisu, sumarizaci videa nebo generování kapitol.
-4. Výsledky se zobrazí v příslušných textových polích v popup okně.
+1. Visit a video on YouTube.
+2. Click on the extension icon to open the popup window.
+3. Use the buttons to download the transcript, summarize the video, or generate chapters.
+4. Results will be displayed in the respective text fields in the popup window.
+5. To clear the cache for the current video, use the "Clear Cache" button.
 
-## Struktura projektu
+## Project Structure
 
-- `manifest.json`: Konfigurační soubor rozšíření.
-- `background.js`: Service worker pro správu stavu rozšíření a komunikaci s API.
-- `content.js`: Skript pro interakci s webovou stránkou YouTube.
-- `injected.js`: Skript injektovaný do stránky YouTube pro extrakci dat.
-- `popup.html`: HTML struktura popup okna.
-- `popup.js`: Logika pro interakci s uživatelským rozhraním v popup okně.
+- `manifest.json`: Extension configuration file.
+- `background.js`: Service worker for managing extension state, API communication, and cache management.
+- `content.js`: Script for interacting with the YouTube webpage and detecting video changes.
+- `injected.js`: Script injected into the YouTube page for data and caption extraction.
+- `popup.html`: HTML structure of the popup window.
+- `popup.js`: Logic for interacting with the user interface in the popup window and managing localization.
+- `options.html`: HTML structure of the settings page.
+- `options.js`: Logic for saving and loading extension settings.
 
-## Technické detaily
+## Technical Details
 
-### Extrakce titulků
+### Caption Extraction
 
-Rozšíření používá dva přístupy pro získání titulků:
-1. Extrakce z `ytInitialPlayerResponse` objektu na stránce YouTube.
-2. Pokud první metoda selže, používá alternativní API volání.
+The extension uses two approaches to obtain captions:
+1. Extraction from the `ytInitialPlayerResponse` object on the YouTube page.
+2. If the first method fails, it uses an alternative API call to retrieve captions.
 
-### AI Integrace
+### AI Integration
 
-Pro sumarizaci a generování kapitol je využíváno OpenAI API s modelem GPT-4o-mini. Komunikace s API je implementována v `background.js`.
+OpenAI API is used for summarization and chapter generation. Users can choose between GPT-4o-mini and GPT-3.5-turbo models. API communication is implemented in `background.js`.
 
-### Cachování
+### Caching
 
-Data jsou cachována lokálně pomocí `chrome.storage.local` API pro rychlejší přístup a snížení počtu API volání.
+Data is cached locally using the `chrome.storage.local` API for faster access and to reduce the number of API calls. Each video has its own cache for transcript, summary, and chapters.
 
-### Bezpečnost
+### Video Change Detection
 
-API klíč je bezpečně uložen pomocí `chrome.storage.sync` API a není nikdy zobrazen v čitelné podobě v uživatelském rozhraní.
+The extension actively monitors URL and DOM changes to detect transitions to new videos, ensuring the displayed data remains current.
 
-## Omezení
+### Localization
 
-- Rozšíření funguje pouze na stránkách YouTube.
-- Pro sumarizaci a generování kapitol je vyžadován platný OpenAI API klíč.
-- Kvalita shrnutí a kapitol závisí na dostupnosti a kvalitě titulků videa.
+The extension supports multiple languages for the user interface. Localization strings are stored in the `i18n` object in the `popup.js` file.
 
-## Budoucí vylepšení
+### Security
 
-- Podpora více jazyků pro titulky a shrnutí.
-- Integrace s dalšími AI službami pro větší flexibilitu.
-- Rozšíření funkcionality na další video platformy.
+The API key is securely stored using the `chrome.storage.sync` API and is never displayed in readable form in the user interface.
 
-## Příspěvky
+## Limitations
 
-Příspěvky k projektu jsou vítány. Prosím, otevřete issue nebo pull request na GitHub repozitáři projektu.
+- The extension works only on YouTube pages.
+- A valid OpenAI API key is required for summarization and chapter generation.
+- The quality of summaries and chapters depends on the availability and quality of video captions.
 
-## Licence
+## Future Improvements
 
-Toto rozšíření je vydáno pod MIT licencí. Viz soubor `LICENSE` pro více detailů.
+- Integration with additional AI services for greater flexibility.
+- Extending functionality to other video platforms.
+- Implementation of more advanced methods for caption extraction and processing.
+
+## Contributions
+
+Contributions to the project are welcome. Please open an issue or pull request on the project's GitHub repository.
+
+## License
+
+This extension is released under the MIT license. See the `LICENSE` file for more details.
